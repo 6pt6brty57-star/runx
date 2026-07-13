@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -euo pipefail`n# Runs from the controller checkout against the separate PR-branch checkout.
 
 TARGET="$(cd "$1" && pwd)"
 cd "$TARGET"
