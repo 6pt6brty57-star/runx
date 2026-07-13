@@ -17,7 +17,7 @@ SOURCEY_VERSION="$(sourcey --version)"
 echo "runx=$RUNX_VERSION"
 echo "sourcey=$SOURCEY_VERSION"
 test "$RUNX_VERSION" = "runx-cli 0.7.0"
-test "$SOURCEY_VERSION" = "3.6.5"
+test "$SOURCEY_VERSION" = "[log] 3.6.5"
 echo "Rebuilding Sourcey output"
 sourcey build --config sourcey.config.ts --output sourcey-docs
 
