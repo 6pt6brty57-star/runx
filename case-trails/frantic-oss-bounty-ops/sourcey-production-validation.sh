@@ -12,8 +12,12 @@ rm -rf "$RECEIPTS" "$PREP" "$RESULT" "$VERIFY" sourcey-docs/authority.json
 mkdir -p "$RECEIPTS" .runx/sourcey-production
 
 echo "Checking pinned tool versions"
-test "$(runx --version)" = "runx-cli 0.7.0"
-test "$(sourcey --version)" = "3.6.5"
+RUNX_VERSION="$(runx --version)"
+SOURCEY_VERSION="$(sourcey --version)"
+echo "runx=$RUNX_VERSION"
+echo "sourcey=$SOURCEY_VERSION"
+test "$RUNX_VERSION" = "runx-cli 0.7.0"
+test "$SOURCEY_VERSION" = "3.6.5"
 echo "Rebuilding Sourcey output"
 sourcey build --config sourcey.config.ts --output sourcey-docs
 
