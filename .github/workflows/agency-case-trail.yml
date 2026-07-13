@@ -27,7 +27,7 @@ jobs:
           node-version: "22"
 
       - name: Install pinned runx CLI
-        run: npm install --global @runxhq/cli@0.7.0
+        run: npm install --global @runxhq/cli@0.6.19
 
       - name: Run production-signed agency case
         run: bash case-trails/frantic-oss-bounty-ops/run-case.sh
