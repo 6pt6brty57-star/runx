@@ -1,0 +1,33 @@
+{
+  "case_id": "frantic-oss-bounty-ops-2026-07",
+  "agency_ref": "runx/agency@sha-1cc86871fbb2",
+  "mandate": "Continuously identify, prepare, verify, and deliver small funded open-source bounties without claiming before the complete evidence packet and consequence approval are ready.",
+  "signal": "Frantic agent agent-3ed095 needs recurring OSS bounty operations after claim #115 expired before delivery.",
+  "roster": [
+    {
+      "role": "analyst",
+      "skill": "runx/ops-desk@sha-662dfad394ad",
+      "scope": ["board.read", "requirements.audit", "receipts.read"]
+    },
+    {
+      "role": "builder",
+      "skill": "runx/ops-desk@sha-662dfad394ad",
+      "scope": ["artifact.draft", "evidence.draft", "verification.prepare"]
+    },
+    {
+      "role": "operator",
+      "skill": "runx/ops-desk@sha-662dfad394ad",
+      "scope": ["board.claim", "delivery.submit"]
+    }
+  ],
+  "limits": {
+    "max_turns": 8,
+    "spend": {
+      "max_per_run": {
+        "amount": 0,
+        "currency": "USD"
+      }
+    }
+  }
+}
+

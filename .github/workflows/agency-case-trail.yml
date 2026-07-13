@@ -1,0 +1,52 @@
+name: Agency case trail
+
+on:
+  push:
+    branches:
+      - codex/agency-case-trail
+    paths:
+      - .github/workflows/agency-case-trail.yml
+      - case-trails/frantic-oss-bounty-ops/input/**
+      - case-trails/frantic-oss-bounty-ops/run-case.sh
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  run-agency-case:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install pinned runx CLI
+        run: npm install --global @runxhq/cli@0.7.0
+
+      - name: Run production-signed agency case
+        run: bash case-trails/frantic-oss-bounty-ops/run-case.sh
+
+      - name: Publish sealed trail to branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add case-trails/frantic-oss-bounty-ops
+          if git diff --cached --quiet; then
+            echo "No generated changes"
+          else
+            git commit -m "docs: publish production-signed agency case trail"
+            git push
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: agency-case-trail
+          path: case-trails/frantic-oss-bounty-ops
+          if-no-files-found: error
+
