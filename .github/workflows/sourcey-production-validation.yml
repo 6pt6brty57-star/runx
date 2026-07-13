@@ -1,0 +1,56 @@
+name: Sourcey production validation
+
+on:
+  push:
+    branches:
+      - codex/agency-case-trail
+    paths:
+      - .github/workflows/sourcey-production-validation.yml
+      - case-trails/frantic-oss-bounty-ops/sourcey-production-validation.sh
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  validate-sourcey-artifact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: controller
+
+      - uses: actions/checkout@v4
+        with:
+          ref: codex/sourcey-llms
+          path: target
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install pinned tools
+        run: |
+          npm install --global @runxhq/cli@0.7.0 sourcey@3.6.5
+          runx --version
+          sourcey --version
+
+      - name: Generate production-signed validation
+        run: bash controller/case-trails/frantic-oss-bounty-ops/sourcey-production-validation.sh target
+
+      - name: Publish validation evidence to PR branch
+        working-directory: target
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add sourcey-docs
+          git commit -m "docs: publish production Sourcey validation"
+          git push origin HEAD:codex/sourcey-llms
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sourcey-production-validation
+          path: target/sourcey-docs
+          if-no-files-found: error
