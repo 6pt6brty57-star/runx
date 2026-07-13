@@ -10,7 +10,11 @@ PREP="sourcey-docs/production-prepare.json"
 RESULT="sourcey-docs/production-result.json"
 VERIFY="sourcey-docs/production-verify.json"
 rm -rf "$RECEIPTS" "$PREP" "$RESULT" "$VERIFY" sourcey-docs/authority.json
-mkdir -p "$RECEIPTS" .runx/sourcey-production
+BACKUP=".runx/sourcey-production/preserved-evidence"
+rm -rf "$BACKUP"
+mkdir -p "$RECEIPTS" "$BACKUP"
+cp sourcey-docs/evidence.json "$BACKUP/evidence.json"
+cp sourcey-docs/report.md "$BACKUP/report.md"
 
 echo "Checking pinned tool versions"
 RUNX_VERSION="$(runx --version)"
@@ -21,6 +25,8 @@ test "$RUNX_VERSION" = "runx-cli 0.7.0"
 test "$SOURCEY_VERSION" = "[log] 3.6.5"
 echo "Rebuilding Sourcey output"
 sourcey build --config sourcey.config.ts --output sourcey-docs
+cp "$BACKUP/evidence.json" sourcey-docs/evidence.json
+cp "$BACKUP/report.md" sourcey-docs/report.md
 
 openssl genpkey -algorithm ED25519 -out .runx/sourcey-production/signing-key.pem >/dev/null 2>&1
 SEED="$(openssl pkey -in .runx/sourcey-production/signing-key.pem -outform DER | tail -c 32 | base64 -w0)"
@@ -60,17 +66,18 @@ fi
 test "$(jq -r '.status' "$RESULT")" = "sealed"
 RECEIPT_ID="$(jq -r '.receipt_id' "$RESULT")"
 test -n "$RECEIPT_ID"
-
-echo "Verifying production receipt"
-runx verify "$RECEIPT_ID" --receipt-dir "$RECEIPTS" --json >"$VERIFY" || {
-  cat "$VERIFY"
-  exit 1
-}
-test "$(jq -r '.valid' "$VERIFY")" = "true"
-test "$(jq -r '.signature.mode' "$VERIFY")" = "production"
-
 RECEIPT_FILE="$RECEIPTS/${RECEIPT_ID/:/-}.json"
 test -f "$RECEIPT_FILE"
+
+echo "Verifying production receipt"
+runx verify --receipt "$RECEIPT_FILE" --json >"$VERIFY" 2>"$VERIFY.stderr" || {
+  cat "$VERIFY"
+  cat "$VERIFY.stderr" >&2
+  exit 1
+}
+rm -f "$VERIFY.stderr"
+test "$(jq -r '.valid' "$VERIFY")" = "true"
+test "$(jq -r '.signature.mode' "$VERIFY")" = "production"
 cp "$RECEIPT_FILE" sourcey-docs/runx-receipt.json
 
 PUBLIC_KEY_SHA256="$(printf '%s' "$PUBLIC_KEY" | base64 -d | sha256sum | cut -d' ' -f1)"
