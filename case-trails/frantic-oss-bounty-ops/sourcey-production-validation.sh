@@ -11,8 +11,10 @@ VERIFY="sourcey-docs/production-verify.json"
 rm -rf "$RECEIPTS" "$PREP" "$RESULT" "$VERIFY" sourcey-docs/authority.json
 mkdir -p "$RECEIPTS" .runx/sourcey-production
 
+echo "Checking pinned tool versions"
 test "$(runx --version)" = "runx-cli 0.7.0"
 test "$(sourcey --version)" = "3.6.5"
+echo "Rebuilding Sourcey output"
 sourcey build --config sourcey.config.ts --output sourcey-docs
 
 openssl genpkey -algorithm ED25519 -out .runx/sourcey-production/signing-key.pem >/dev/null 2>&1
@@ -30,18 +32,35 @@ runx skill sourcey-validation default -R "$RECEIPTS" \
   -i "repo_root=$TARGET" --non-interactive --json >"$PREP"
 RC=$?
 set -e
-test "$RC" -eq 2
+if [[ "$RC" -ne 2 ]]; then
+  cat "$PREP"
+  echo "Expected operator-context preparation to exit 2, got $RC" >&2
+  exit 1
+fi
 DIGEST="$(jq -r '.digest // empty' "$PREP")"
 test -n "$DIGEST"
 
+echo "Running production-signed Sourcey validation"
+set +e
 runx skill sourcey-validation default -R "$RECEIPTS" \
   -i "repo_root=$TARGET" --approve-operator-context "$DIGEST" \
   --non-interactive --json >"$RESULT"
+RC=$?
+set -e
+if [[ "$RC" -ne 0 ]]; then
+  cat "$RESULT"
+  echo "Production validation exited $RC" >&2
+  exit 1
+fi
 test "$(jq -r '.status' "$RESULT")" = "sealed"
 RECEIPT_ID="$(jq -r '.receipt_id' "$RESULT")"
 test -n "$RECEIPT_ID"
 
-runx verify "$RECEIPT_ID" --receipt-dir "$RECEIPTS" --json >"$VERIFY"
+echo "Verifying production receipt"
+runx verify "$RECEIPT_ID" --receipt-dir "$RECEIPTS" --json >"$VERIFY" || {
+  cat "$VERIFY"
+  exit 1
+}
 test "$(jq -r '.valid' "$VERIFY")" = "true"
 test "$(jq -r '.signature.mode' "$VERIFY")" = "production"
 
