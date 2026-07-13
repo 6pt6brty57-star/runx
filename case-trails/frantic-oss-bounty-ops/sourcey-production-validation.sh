@@ -26,7 +26,7 @@ export RUNX_RECEIPT_VERIFY_KID="$RUNX_RECEIPT_SIGN_KID"
 export RUNX_RECEIPT_VERIFY_ED25519_PUBLIC_KEY_BASE64="$PUBLIC_KEY"
 
 set +e
-runx skill sourcey-docs/validation default -R "$RECEIPTS" \
+runx skill sourcey-validation default -R "$RECEIPTS" \
   -i "repo_root=$TARGET" --non-interactive --json >"$PREP"
 RC=$?
 set -e
@@ -34,7 +34,7 @@ test "$RC" -eq 2
 DIGEST="$(jq -r '.digest // empty' "$PREP")"
 test -n "$DIGEST"
 
-runx skill sourcey-docs/validation default -R "$RECEIPTS" \
+runx skill sourcey-validation default -R "$RECEIPTS" \
   -i "repo_root=$TARGET" --approve-operator-context "$DIGEST" \
   --non-interactive --json >"$RESULT"
 test "$(jq -r '.status' "$RESULT")" = "sealed"
