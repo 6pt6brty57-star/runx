@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 # Runs from the controller checkout against the separate PR-branch checkout.
+# The target branch may publish through its stable upstream pull-request ref.
 
 TARGET="$(cd "$1" && pwd)"
 cd "$TARGET"
